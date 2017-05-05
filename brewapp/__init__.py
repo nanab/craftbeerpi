@@ -61,7 +61,9 @@ app.brewapp_config = {}
 app.brewapp_thermometer_cfg = {}
 app.brewapp_thermometer_log = {}
 app.brewapp_thermometer_last = {}
-
+app.brewapp_flowmeter_cfg = {}
+app.brewapp_flowmeter_log = {}
+app.brewapp_flowmeter_last = {}
 
 ## Create Database
 db = SQLAlchemy(app)

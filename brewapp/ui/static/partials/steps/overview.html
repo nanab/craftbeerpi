@@ -55,7 +55,7 @@
                         <td>
                             <a ng-click="edit(node)">{{ node.name }}</a>
                         </td>
-                        <td>
+                        <td >
                             {{ node.temp }} °{{ config['UNIT'] }}
                         </td>
                         <td>
@@ -63,6 +63,9 @@
                         </td>
                         <td>
                             {{ node.kettleid | kettle_name:kettles_name}}
+                        </td>
+						<td>
+                            {{ node.wateramountfill }} L
                         </td>
                     </tr>
                     </tbody>

@@ -40,6 +40,11 @@ function CBPKettle($resource) {
             url: '/api/thermometer/sensors',
             isArray: true
         },
+		getflowmeter: {
+            method: 'GET',
+            url: '/api/flowmeter/sensors',
+            isArray: true
+        },
         getDevices: {
             method: 'GET',
             url: '/api/hardware/devices',
@@ -84,6 +89,11 @@ function CBPKettle($resource) {
         getLastTemp: {
             method: 'GET',
             url: '/api/thermometer/last',
+            isArray: false
+        },
+		getLastFlow: {
+            method: 'GET',
+            url: '/api/flowmeter/last',
             isArray: false
         },
         getTemps: {

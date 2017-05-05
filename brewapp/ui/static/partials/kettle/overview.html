@@ -23,7 +23,8 @@
 
 						<td>{{ 'HEATER' | translate}}</td>
 						<td>{{ 'AGITATOR' | translate}}</td>
-						<td class="hidden-xs">{{ 'AUTOMATIC' | translate}}</td>
+						<td>{{ 'FLOWMETER' | translate}}</td>
+						<td >{{ 'AUTOMATIC' | translate}}</td>
 						<td class="hidden-xs">{{ 'HEIGHT' | translate}}/{{ 'DIAMETER' | translate}}</td>
 					</thead>
 					<tr ng-repeat="item in kettles track by $index">
@@ -39,6 +40,10 @@
 						</td>
 						<td>
 							{{item.agitator | hardware_name:hardware_dict}}
+
+						</td>
+                        <td>
+							{{item.flowmeter | hardware_name:hardware_dict}}
 
 						</td>
 						<td class="hidden-xs">

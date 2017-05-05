@@ -44,7 +44,24 @@
                     </div>
                 </div>
                 <div class="col-xs-5 pad text-center">
-                    <div><strong> {{ item.temp }} °{{ config["UNIT"] }}  </strong>
+                    <div ng-if="item.type == 'A' || item.type == 'M'"><strong> {{ item.temp }} °{{ config["UNIT"] }}  </strong>
+
+                        <div ng-if="item.state == 'A'" class="btn-group" uib-dropdown keyboard-nav>
+                            <button id="simple-btn-keyboard-nav" type="button" class="btn btn-primary btn-xs"
+                                    uib-dropdown-toggle>
+                                <i class="fa fa-forward"></i>
+                            </button>
+                            <ul class="dropdown-menu" uib-dropdown-menu role="menu"
+                                aria-labelledby="simple-btn-keyboard-nav">
+                                <li><a ng-click="next()">{{ 'NEXT' | translate }}</a></li>
+                                <li><a ng-click="start_timer()">{{ 'START_TIMER' | translate }}</a></li>
+                                <li><a ng-click="reset_current()">{{ 'RESET_CURRENT_STEP' | translate }}</a></li>
+                            </ul>
+                        </div>
+
+
+                    </div>
+					<div ng-if="item.type == 'F'"><strong> {{ item.wateramountfill }} L  </strong>
 
                         <div ng-if="item.state == 'A'" class="btn-group" uib-dropdown keyboard-nav>
                             <button id="simple-btn-keyboard-nav" type="button" class="btn btn-primary btn-xs"

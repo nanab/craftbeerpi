@@ -107,7 +107,42 @@
                 </table>
             </div>
         </div>
+		<div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    {{ 'FLOWMETER' | translate }}
+                    <div class="btn-group pull-right" role="group">
+                        <a ng-click="createHardware('F')" uib-tooltip="{{ 'ADD' | translate }}" class="btn btn-success"
+                           role="group">
+                            <i class="fa fa-plus"></i></a>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <table class="table" style="font-size: 1em">
+                    <thead>
+                    <td>{{ 'NAME' | translate }}</td>
 
+                    <td>{{ 'VISIBILITY' | translate }}</td>
+                    <td>{{ 'SWITCH' | translate }}</td>
+                    </thead>
+                    <tr ng-repeat="item in flowmeter track by $index">
+
+                        <td>
+                            <a ng-click="edit(item)">{{ item.name }}</a>
+                        </td>
+
+                        <td>
+                            <i class="fa fa-eye" ng-if="item.config.hide == false"></i>
+                            <i class="fa fa-eye-slash" ng-if="item.config.hide"></i>
+                        </td>
+                        <td>
+                            {{ item.config.switch }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <div class="panel panel-default">
@@ -142,7 +177,9 @@
         </div>
     </div>
 
-<!--
+	
+
+
     <div class="row">
         <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
             <div class="panel panel-default">
@@ -168,7 +205,7 @@
             </div>
         </div>
 
--->
+
 
     </div>
 

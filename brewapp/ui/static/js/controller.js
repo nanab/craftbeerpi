@@ -2,7 +2,13 @@ function BaseController($scope, CBPConfig, CBPKettle, CBPHardware, CBPSteps) {
 
     // Web Socket
     $scope.$on('socket:temp_udpdate', function (ev, data) {
+		
         $scope.temps = data;
+    });
+	
+	$scope.$on('socket:flowmeter_update', function (ev, data) {
+		
+        $scope.flows = data;
     });
 
     $scope.$on('socket:step_update', function (ev, data) {
@@ -17,6 +23,11 @@ function BaseController($scope, CBPConfig, CBPKettle, CBPHardware, CBPSteps) {
         "value": "No Thermometer"
     });
 
+	$scope.flowmeter = [];
+    $scope.flowmeter.push({
+        "key": "",
+        "value": "No Flowmeter"
+    });
     $scope.actors = [];
 
     $scope.hardware = []
@@ -27,6 +38,7 @@ function BaseController($scope, CBPConfig, CBPKettle, CBPHardware, CBPSteps) {
 
     $scope.hardware_dict = {}
     $scope.thermometers = [];
+	$scope.flowmeters = [];
 
     CBPHardware.query(function (data) {
         data.objects.forEach(function (entry) {
@@ -38,7 +50,14 @@ function BaseController($scope, CBPConfig, CBPKettle, CBPHardware, CBPSteps) {
                 });
                 $scope.thermometers.push(entry);
             }
-            else {
+            else if (entry.type == 'F') {
+                $scope.flowmeter.push({
+                    "key": entry.id,
+                    "value": entry.name
+                });
+                $scope.flowmeters.push(entry);
+            }
+			else {
                 $scope.actors.push(entry);
                 $scope.hardware.push({
                     "key": entry.id,
@@ -203,11 +222,13 @@ function HardwareOverviewController($scope, CBPHardware, ConfirmMessage, CBPHydr
 
     $scope.heater = [];
     $scope.pump = [];
+    $scope.flowmeter = [];
     $scope.agitator = [];
     $scope.other = [];
     $scope.thermometer = [];
     $scope.type = [
         {"key": "P", "value": "PUMP"},
+		{"key": "F", "value": "FLOWMETER"},
         {"key": "A", "value": "AGITATOR"},
         {"key": "H", "value": "HEATER"},
         {"key": "T", "value": "THERMOMETER"},
@@ -234,6 +255,7 @@ function HardwareOverviewController($scope, CBPHardware, ConfirmMessage, CBPHydr
 
         $scope.heater = [];
         $scope.pump = [];
+		$scope.flowmeter = [];
         $scope.agitator = [];
         $scope.other = [];
         $scope.thermometer = [];
@@ -244,6 +266,9 @@ function HardwareOverviewController($scope, CBPHardware, ConfirmMessage, CBPHydr
                     break;
                 case "P":
                     $scope.pump.push(d);
+                    break;
+                case "F":
+                    $scope.flowmeter.push(d);
                     break;
                 case "A":
                     $scope.agitator.push(d);
@@ -266,7 +291,14 @@ function HardwareOverviewController($scope, CBPHardware, ConfirmMessage, CBPHydr
             });
         })
     });
-
+	CBPKettle.getflowmeter({}, function (response) {
+        angular.forEach(response, function (d) {
+            $scope.sensors.push({
+                "key": d,
+                "value": d
+            });
+        })
+    });
     CBPHardware.query(function (response) {
         $scope.sorthardware(response.objects);
         $scope.hw = response.objects;
@@ -280,6 +312,16 @@ function HardwareOverviewController($scope, CBPHardware, ConfirmMessage, CBPHydr
                 "type": type,
                 "config": {
                     "thermometer": {"offset": 0},
+                    "hide": false
+                }
+            };
+        }
+		else if (type == 'F') {
+            $scope.hardware = {
+                "name": "",
+                "type": type,
+                "config": {
+                    "inverted": false,
                     "hide": false
                 }
             };
@@ -552,12 +594,50 @@ function StepOverviewController($scope, $controller, CBPSteps, CBPKettle, $uibMo
             });
         });
     }
-
+	$scope.ShowHide = function (buttonid) {
+    	//Show/hide buttons in form.
+		if (buttonid == "S"){
+			$scope.switchFormShow = true;
+			$scope.fillFormShow = false;
+			$scope.tempFormShow = false;
+			$scope.autoCheckFormShow = false;
+		}else if (buttonid == "F"){
+			$scope.fillFormShow = true;
+			$scope.switchFormShow = false;
+			$scope.tempFormShow = false;
+			$scope.autoCheckFormShow = false;
+		}else if (buttonid == "A"){
+			$scope.fillFormShow = false;
+			$scope.switchFormShow = false;
+			$scope.tempFormShow = true;
+			$scope.autoCheckFormShow = true;
+		}else if (buttonid == "M"){
+			$scope.fillFormShow = false;
+			$scope.switchFormShow = false;
+			$scope.tempFormShow = true;
+			$scope.autoCheckFormShow = false;
+		}
+	};
     $scope.create = function () {
-        console.log("NEW")
         $scope.item = angular.copy({"type": "A", "state": "I", "kettleid": 0});
         $scope.edit_mode = false;
         $scope.headline = "CREATE_STEP";
+		$scope.switchFormShow = false;
+		$scope.fillFormShow = false;
+		$scope.tempFormShow = true;
+		$scope.autoCheckFormShow = true;
+		$scope.item.timer = 0;
+		$scope.item.switchstate = 0;
+		$scope.item.kettleid = "1";
+		
+		$scope.filterKettle = function(t){
+    		if (t.key == null){
+        		return false;
+    		} else{
+        		return true;
+    		}
+		};
+
         var modalInstance = $uibModal.open({
             templateUrl: 'static/partials/steps/form.html',
             controller: 'modalController',
@@ -571,10 +651,28 @@ function StepOverviewController($scope, $controller, CBPSteps, CBPKettle, $uibMo
 
 
     $scope.edit = function (item) {
+		console.log(item);
         $scope.edit_mode = true;
         $scope.item = angular.copy(item);
         $scope.headline = "EDIT_STEP";
-
+		if ($scope.item.autostartheater == 1){
+			$scope.item.autostartheater = true;
+		}
+		if ($scope.item.autostopheater == 1){
+			$scope.item.autostopheater = true;
+		}
+		$scope.ShowHide(item.type);
+		if ($scope.item.switchid != null){
+			$scope.item.switchid = item.switchid.toString();
+		};
+		$scope.item.kettleid = item.kettleid.toString();
+		$scope.filterKettle = function(t){
+    		if (t.key == null){
+        		return false;
+    		} else{
+        		return true;
+    		}
+		};
         var modalInstance = $uibModal.open({
             animation: true,
             controller: "modalController",
@@ -715,7 +813,9 @@ function DashboardKettleController($scope, $controller, CBPKettle, ConfirmMessag
     CBPKettle.getLastTemp(function (data) {
         $scope.temps = data;
     });
-
+	CBPKettle.getLastFlow(function (data) {
+        $scope.flows = data;
+    });
     CBPSwitch.get(function (data) {
         $scope.switch_state = data;
     })
@@ -796,6 +896,10 @@ function DashboardHardwareController($scope, $controller, mySocket, CBPHardware,
         $scope.temps = data;
     });
 
+	$scope.$on('socket:flowmeter_update', function (ev, data) {
+        $scope.flows = data;
+    });
+
     $scope.$on('socket:switch_state_update', function (ev, data) {
 
         $scope.switch_state = data;
@@ -815,6 +919,9 @@ function DashboardHardwareController($scope, $controller, mySocket, CBPHardware,
         $scope.temps = data;
     });
 
+	CBPKettle.getLastFlow(function (data) {
+        $scope.flows = data;
+    });
 
 }
 
@@ -1222,6 +1329,7 @@ function setupController($scope, $translate, CBPSetup, $window, $location, Wizar
     $scope.agitator = [];
     $scope.thermometer = [];
     $scope.pump = [];
+	$scope.flowmeter = [];
     $scope.kettle = [];
 
 
@@ -1341,6 +1449,14 @@ function setupController($scope, $translate, CBPSetup, $window, $location, Wizar
                     "config": {"inverted": false, "hide": false}
                 });
                 break;
+            case 'F':
+                $scope.flowmeter.push({
+                    "id": i++,
+                    "name": "Flowmeter",
+                    "type": "F",
+                    "config": {"inverted": false, "hide": false}
+                });
+                break;
             case 'T':
                 $scope.thermometer.push({
                     "id": i++,
@@ -1366,6 +1482,9 @@ function setupController($scope, $translate, CBPSetup, $window, $location, Wizar
             case 'P':
                 $scope.pump.splice(index, 1);
                 break;
+            case 'F':
+                $scope.flowmeter.splice(index, 1);
+                break;
             case 'T':
                 $scope.thermometer.splice(index, 1);
                 break;
@@ -1377,7 +1496,7 @@ function setupController($scope, $translate, CBPSetup, $window, $location, Wizar
 
     $scope.finish = function () {
 
-        var hw = $scope.heater.concat($scope.agitator).concat($scope.pump).concat($scope.thermometer);
+        var hw = $scope.heater.concat($scope.agitator).concat($scope.pump).concat($scope.flowmeter).concat($scope.thermometer);
 
         CBPSetup.setup({}, {
             "hardware": hw,
@@ -1503,6 +1622,10 @@ function FermenterController($scope, $uibModal, $controller, CBPHydrometer, CBPF
 
     CBPKettle.getLastTemp(function (data) {
         $scope.temps = data;
+    });
+
+	CBPKettle.getLastFlow(function (data) {
+        $scope.flows = data;
     });
 
     CBPSwitch.get(function (data) {

@@ -41,6 +41,13 @@
                                         ng-selected="kettle.agitator == t.key">{{ t.value }}</option>
                             </select>
                         </div>
+						<div class="form-group" ng-if="hardware.length >= 2">
+                            <label>Flowmeter</label>
+                            <select class="form-control" ng-model="kettle.flowmeter">
+                                <option ng-repeat="t in hardware" value="{{ t.key }}"
+                                        ng-selected="kettle.flowmeter == t.key">{{ t.value }}</option>
+                            </select>
+                        </div>
                         <div class="form-group" ng-if="hardware.length < 2">
                             <label>{{ 'HEATER' | translate }}</label>
                             <label>{{ 'AGITATOR' | translate }} {{ 'SWITCH' | translate }}</label>

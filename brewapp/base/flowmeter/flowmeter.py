@@ -1,74 +1,72 @@
 import time
 import random
+import os
+from brewapp import app
+from brewapp.base.actor import ActorBase
+from brewapp.base.model import *
+from flowmeterdata import *
 
-class FlowMeter():
-  PINTS_IN_A_LITER = 2.11338
-  SECONDS_IN_A_MINUTE = 60
-  MS_IN_A_SECOND = 1000.0
-  displayFormat = 'metric'
-  beverage = 'beer'
-  enabled = True
-  clicks = 0
-  lastClick = 0
-  clickDelta = 0
-  hertz = 0.0
-  flow = 0 # in Liters per second
-  thisPour = 0.0 # in Liters
-  totalPour = 0.0 # in Liters
+import threading
+try:
+	import RPi.GPIO as GPIO
+	app.logger.info("SETUP GPIO Module Loaded")
+except Exception as e:
+	app.logger.error("SETUP GPIO Module " + str(e))
+	pass
 
-  def __init__(self, displayFormat, beverage):
-    self.displayFormat = displayFormat
-    self.beverage = beverage
-    self.clicks = 0
-    self.lastClick = int(time.time() * FlowMeter.MS_IN_A_SECOND)
-    self.clickDelta = 0
-    self.hertz = 0.0
-    self.flow = 0.0
-    self.thisPour = 0.0
-    self.totalPour = 0.0
-    self.enabled = True
 
-  def update(self, currentTime):
-    self.clicks += 1
-    # get the time delta
-    self.clickDelta = max((currentTime - self.lastClick), 1)
-    # calculate the instantaneous speed
-    if (self.enabled == True and self.clickDelta < 1000):
-      self.hertz = FlowMeter.MS_IN_A_SECOND / self.clickDelta
-      self.flow = self.hertz / (FlowMeter.SECONDS_IN_A_MINUTE * 7.5)  # In Liters per second
-      instPour = self.flow * (self.clickDelta / FlowMeter.MS_IN_A_SECOND)
-      self.thisPour += instPour
-      self.totalPour += instPour
-    # Update the last click
-    self.lastClick = currentTime
+class Flowmeter(ActorBase):
+	global fms
+	fms = dict()
+	def init(self):
+		app.logger.info("INIT flowmeter")
+		try:
+			GPIO.setmode(GPIO.BCM) # use real GPIO numbering			
+			app.logger.info(app.brewapp_flowmeter_cfg)
+			for f in app.brewapp_flowmeter_cfg:
+				hw = app.brewapp_flowmeter_cfg[f];
 
-  def getBeverage(self):
-    return str(random.choice(self.beverage))
+				gpioNumber = self.translateDeviceName(hw["config"]["switch"])
+				GPIO.setup(gpioNumber,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+				GPIO.add_event_detect(gpioNumber, GPIO.RISING, callback=self.doAClick, bouncetime=20) # Beer, on Pin 23
+				app.logger.info("flowmeter" + str(gpioNumber))
+				app.logger.info("INIT flowmeter" + str(f))
+				fms[f] = FlowMeterData()
+		except Exception as e:
+			app.logger.error("SETUP GPIO for flowmeter FAILED " + str(e))
+			self.state = False
 
-  def getFormattedClickDelta(self):
-     return str(self.clickDelta) + ' ms'
+	def doAClick(self, channel):
+		for f in app.brewapp_flowmeter_cfg:
+			hw = app.brewapp_flowmeter_cfg[f];
+			gpioNumber = self.translateDeviceName(hw["config"]["switch"])
+			if (gpioNumber == channel):
+				currentTime = int(time.time() * FlowMeterData.MS_IN_A_SECOND)
+				fms[f].update(currentTime)
 
-  def getFormattedHertz(self):
-     return str(round(self.hertz,3)) + ' Hz'
+	def getUpdate(self, flowId):
+		for f in app.brewapp_flowmeter_cfg:
+			flow = fms[f].thisPour
+			flow = "{0:.2f}".format(flow)
+			return flow
 
-  def getFormattedFlow(self):
-    if(self.displayFormat == 'metric'):
-      return str(round(self.flow,3)) + ' L/s'
-    else:
-      return str(round(self.flow * FlowMeter.PINTS_IN_A_LITER, 3)) + ' pints/s'
 
-  def getFormattedThisPour(self):
-    if(self.displayFormat == 'metric'):
-      return str(round(self.thisPour,3)) + ' L'
-    else:
-      return str(round(self.thisPour * FlowMeter.PINTS_IN_A_LITER, 3)) + ' pints'
+	def translateDeviceName(self, name):
+		if(name == None or name == ""):
+			return None
+		return int(name[4:])
+	
+	
+	def getSensors(self):
+		gpio = []
+		for i in range(2, 28):
+			gpio.append("GPIO"+str(i))
+		return gpio
 
-  def getFormattedTotalPour(self):
-    if(self.displayFormat == 'metric'):
-      return str(round(self.totalPour,3)) + ' L'
-    else:
-      return str(round(self.totalPour * FlowMeter.PINTS_IN_A_LITER, 3)) + ' pints'
+	def clearFlowmeterData(self,flowId):
+		fms[int(flowId)].clear
+		return "ok"
 
-  def clear(self):
-    self.thisPour = 0;
-    self.totalPour = 0;
+	
+
+

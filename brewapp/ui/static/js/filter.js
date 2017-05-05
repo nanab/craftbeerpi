@@ -142,7 +142,17 @@ function get_temp() {
         }
     }
 }
-
+function get_flow() {
+    return function (input, data) {
+        try {
+            return data[input];
+        }
+        catch
+            (err) {
+            return "";
+        }
+    }
+}
 function kettle_state() {
     return function (input, data) {
         for (i in data) {
@@ -158,6 +168,7 @@ angular.module("cbpfilter", [])
     .filter("step_state", step_state)
     .filter("switch_state2", switch_state2)
     .filter("get_temp", get_temp)
+	.filter("get_flow", get_flow)
     .filter("hardware_state", hardware_state)
     .filter("kettle_name", kettle_name)
     .filter("kettle_state", kettle_state)

@@ -2,6 +2,7 @@ from flask import request
 from brewapp.base.devices import *
 from brewapp.base.stats import *
 from brewapp.base.thermometer import *
+from brewapp.base.flowmeter import *
 
 from actor import initHardware
 from kettle import initKettle
@@ -48,6 +49,26 @@ def setThermometer():
     app.brewapp_thermometer = thermometer.get(data["type"], dummy_thermometer.DummyThermometer())
     setConfigParameter("THERMOMETER_TYPE",data["type"] )
     return json.dumps(app.brewapp_thermometer.getSensors())
+
+@app.route('/api/setup/flowmeter', methods=['POST'])
+def setFlowmeter():
+    data =request.get_json()
+    flowmeter = {
+        'FLOWMETER': flowmeter.Flowmeter(),
+    }
+    app.brewapp_flowmeter = flowmeter.get(data["type"], flowmeter.Flowmeter())
+    setConfigParameter("FLOWMETER_TYPE",data["type"] )
+    return json.dumps(app.brewapp_flowmeter.getSensors())
+
+@app.route('/api/setup/sendmessage', methods=['POST'])
+def setSendMessage():
+    data =request.get_json()
+    sendmessage = {
+        'PUSHOVER': pushover.pushMessage(),
+    }
+    app.brewapp_sendmessage = sendmessage.get(data["type"], pushover.pushMessage())
+    setConfigParameter("MESSAGE_TYPE",data["type"] )
+    #return json.dumps(app.brewapp_flowmeter.getSensors())
 
 @app.route('/api/setup/hardware', methods=['POST'])
 def setHardware():

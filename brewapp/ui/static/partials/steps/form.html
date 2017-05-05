@@ -12,26 +12,52 @@
         <div class="form-group">
             <label>{{ 'TYPE' | translate }}</label>
             <div class="btn-group">
-                <label class="btn btn-primary" ng-model="item.type" uib-btn-radio="'A'">Automatic</label>
-                <label class="btn btn-primary" ng-model="item.type" uib-btn-radio="'M'">Manuell</label>
+                <label class="btn btn-primary" ng-model="item.type" uib-btn-radio="'A'" ng-click="ShowHide('A')">Automatic</label>
+                <label class="btn btn-primary" ng-model="item.type" uib-btn-radio="'M'" ng-click="ShowHide('M')">Manuell</label>
+				<label class="btn btn-primary" ng-model="item.type" uib-btn-radio="'F'" ng-click="ShowHide('F')">Fill Water</label>
+				<label class="btn btn-primary" ng-model="item.type" uib-btn-radio="'S'" ng-click="ShowHide('S')">Switch</label>
             </div>
         </div>
-        <div class="form-group">
+		<div class="form-group" ng-show="autoCheckFormShow">
+			<label>Start heater:
+				<input type="checkbox" ng-model="item.autostartheater">
+			</label>
+			<label>Stop heater:
+				<input type="checkbox" ng-model="item.autostopheater">
+			</label>
+		</div>
+        <div class="form-group" ng-show="tempFormShow">
 
             <label>{{ 'TARGET_TEMP_IN' | translate }} °{{ config["UNIT"] }}</label>
-            <input type="number" ng-model="item.temp" class="form-control">
+            <input type="number" ng-model="item.temp" class="form-control" >
         </div>
         <div class="form-group">
             <label>{{ 'TIMER_IN_MIN' | translate }}</label>
-            <input type="number" ng-model="item.timer" class="form-control">
+            <input type="number" ng-model="item.timer" class="form-control"  >
         </div>
         <div class="form-group">
             <label>{{ 'KETTLE' | translate }}</label>
 
             <select class="form-control" ng-model="item.kettleid">
-                <option ng-repeat="t in kettles" value="{{ t.key }}"
+                <option ng-repeat="t in kettles | filter: filterKettle" value="{{ t.key }}"
                         ng-selected="item.kettleid == t.key">{{ t.value }}</option>
             </select>
+        </div>
+		<div class="form-group" ng-show="fillFormShow">
+            <label>Waterfill in liters</label>
+            <input type="number" ng-model="item.wateramountfill" class="form-control">
+        </div>
+		<div class="form-group" ng-show="switchFormShow">
+            <label>Switch id</label>
+			<select class="form-control" ng-model="item.switchid">
+				<option ng-repeat="t in hardware" value="{{ t.key }}"
+                                        ng-selected="item.switchid == t.key">{{ t.value }}</option>
+			</select>
+            <!--<input type="number" ng-model="item.switchid" class="form-control">-->
+        </div>
+		<div class="form-group" ng-show="switchFormShow">
+            <label>Switch state</label>
+            <input type="number" ng-model="item.switchstate" class="form-control">
         </div>
     </form>
 </div>

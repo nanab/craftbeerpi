@@ -41,6 +41,8 @@ def init2():
     if(app.createdb == False):
         app.brewapp_hardware.init()
         app.brewapp_thermometer.init()
+        app.brewapp_flowmeter.init()
+        app.brewapp_sendmessage.init()
 
 @brewinit()
 def init():
@@ -64,6 +66,7 @@ def initHardware(cleanup = True):
     app.brewapp_switch_state = {}
     app.brewapp_hardware_config = {}
     app.brewapp_thermometer_cfg = {}
+    app.brewapp_flowmeter_cfg = {}
     app.brewapp_hydrometer_cfg = {}
     hw = Hardware.query.all()
 
@@ -76,6 +79,8 @@ def initHardware(cleanup = True):
 
             if(h1["type"] == "T"):
                 app.brewapp_thermometer_cfg[h1["id"]] = h1
+            elif (h1["type"] == "F"):
+                app.brewapp_flowmeter_cfg[h1["id"]] = h1
             elif (h1["type"] == "S"):
                 pass
             else:
@@ -89,7 +94,7 @@ def initHardware(cleanup = True):
     app.logger.info("## INIT HARDWARE")
     app.logger.info("Hardware: " + str(app.brewapp_hardware_config))
     app.logger.info("Thermometer: " + str(app.brewapp_thermometer_cfg))
-
+    app.logger.info("flowmeter: " + str(app.brewapp_flowmeter_cfg))
 
 @app.route('/api/switch', methods=['GET'])
 def switchstate():

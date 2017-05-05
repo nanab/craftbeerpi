@@ -1,5 +1,6 @@
 import config
 import model
+import requests
 from brewapp import manager
 from model import *
 from util import *
@@ -11,10 +12,12 @@ from werkzeug import secure_filename
 from views import base
 import sqlite3
 from datetime import datetime
-
+from kettle import switch_automatic
+from flowm import getLastFlow
 from buzzer import nextStepBeep, timerBeep, resetBeep
+from sendmessage import sendMessageStep
 from flask_restless.helpers import to_dict
-
+from decimal import Decimal
 
 @app.route('/api/step/order', methods=['POST'])
 def order_steps():
@@ -23,6 +26,7 @@ def order_steps():
     steps =  Step.query.all()
     for s in steps:
         s.order = data[str(s.id)]
+        print s
         db.session.add(s)
         db.session.commit()
     return ('',204)
@@ -46,6 +50,7 @@ def nextStep():
     inactive = Step.query.filter_by(state='I').order_by(Step.order).first()
 
     if(inactive == None):
+        sendMessage("Brewing finnished!")
         socketio.emit('message', {"headline": "BREWING_FINISHED", "message": "BREWING_FINISHED_MESSAGE"}, namespace ='/brew')
 
     if(active != None):
@@ -54,6 +59,8 @@ def nextStep():
         setTargetTemp(active.kettleid, 0)
         db.session.add(active)
         db.session.commit()
+        if (active.type != "M"):
+            sendMessageStep("Step " + active.name + " finnished!" )
         app.brewapp_current_step  = None
 
     if(inactive != None):
@@ -63,6 +70,7 @@ def nextStep():
         db.session.add(inactive)
         db.session.commit()
         app.brewapp_current_step  = to_dict(inactive)
+        sendMessageStep("Step " + inactive.name + " started!")
         if(inactive.timer_start != None):
             app.brewapp_current_step["endunix"] =  int((inactive.timer_start - datetime(1970,1,1)).total_seconds())*1000
 
@@ -107,6 +115,12 @@ def start_timer_of_current_step():
 ## Methods
 def resetSteps():
     resetBeep()
+    stepsR =  Step.query.all()
+    for sR in stepsR:
+        if (sR.kettleid != 0):
+            print app.brewapp_kettle_state[sR.kettleid]["automatic"]
+            if (app.brewapp_kettle_state[sR.kettleid]["automatic"] == 1):
+                switch_automatic(sR.kettleid)
     db.session.query(Step).update({'state': 'I', 'start': None, 'end': None, 'timer_start': None},  synchronize_session='evaluate')
     db.session.commit()
     socketio.emit('step_update', getSteps(), namespace ='/brew')
@@ -158,27 +172,66 @@ def stepjob():
     ## get current temp of target kettle
     try:
         id = int(app.brewapp_kettle_state[cs.get("kettleid")]["sensorid"])
+        autoState = int(app.brewapp_kettle_state[cs.get("kettleid")]["automatic"])
         ct = app.brewapp_thermometer_last[id];
     except:
         ct = 0
 
-    #print cs.get("timer")
-    #print cs.get("timer_start")
-    #print cs.get("temp")
-    #print ct
-    ## check if target temp reached and timer can be started
-    if(cs.get("timer") is not None and cs.get("timer_start") == None and ct >= cs.get("temp")):
+	## check if target temp is not reached and heater can be started
+    if(cs.get("timer") is not None and cs.get("timer_start") == None and ct < cs.get("temp")):
+        if(cs.get("type") == 'A'):
+            if(cs.get("autostartheater") == 1):
+                if (autoState == 0):
+                    switch_automatic(cs.get("kettleid"))
+		
+    ## check if target temp reached and timer can be started for auto or manual temp
+    if (cs.get("type") == 'A') or (cs.get("type") == 'M'):
+        if(cs.get("timer") is not None and cs.get("timer_start") == None and ct >= cs.get("temp")):
 
-        s = Step.query.get(cs.get("id"))
-        s.timer_start = datetime.utcnow()
-        app.brewapp_current_step = to_dict(s)
-        if(s.timer_start != None):
-            app.brewapp_current_step["endunix"] =  int((s.timer_start - datetime(1970,1,1)).total_seconds())*1000
-            timerBeep()
-        db.session.add(s)
-        db.session.commit()
-        socketio.emit('step_update', getSteps(), namespace ='/brew', broadcast=True)
+            s = Step.query.get(cs.get("id"))
+            s.timer_start = datetime.utcnow()
+            app.brewapp_current_step = to_dict(s)
+            if(s.timer_start != None):
+                app.brewapp_current_step["endunix"] =  int((s.timer_start - datetime(1970,1,1)).total_seconds())*1000
+                timerBeep()
+            db.session.add(s)
+            db.session.commit()
+            socketio.emit('step_update', getSteps(), namespace ='/brew', broadcast=True)
 
+    if (cs.get("type") == 'F'):
+        flowId = int(app.brewapp_kettle_state[cs.get("kettleid")]["flowmeter"])
+        flowCurrent = getLastFlow(flowId)
+        if (cs.get("timer") is not None and cs.get("timer_start") == None and int(float(flowCurrent)) >= int(float(cs.get("wateramountfill")))):
+           s = Step.query.get(cs.get("id"))
+           s.timer_start = datetime.utcnow()
+           app.brewapp_current_step = to_dict(s)
+           if(s.timer_start != None):
+               app.brewapp_current_step["endunix"] =  int((s.timer_start - datetime(1970,1,1)).total_seconds())*1000
+               timerBeep()
+           db.session.add(s)
+           db.session.commit()
+           socketio.emit('step_update', getSteps(), namespace ='/brew', broadcast=True)
+
+    if (cs.get("type") == 'S'):
+        if (cs.get("timer") is not None and cs.get("timer_start") == None):
+            switchId = cs.get("switchid")
+            switchState = cs.get("switchstate")
+            if (switchState == 1):
+            	app.brewapp_hardware.switchON(switchId);
+            	app.brewapp_switch_state[int(switchId)]  = True
+            else:
+                app.brewapp_hardware.switchOFF(switchId);
+            	app.brewapp_switch_state[int(switchId)]  = False
+            s = Step.query.get(cs.get("id"))
+            s.timer_start = datetime.utcnow()
+            app.brewapp_current_step = to_dict(s)
+            if(s.timer_start != None):
+                app.brewapp_current_step["endunix"] =  int((s.timer_start - datetime(1970,1,1)).total_seconds())*1000
+                timerBeep()
+            db.session.add(s)
+            db.session.commit()
+            socketio.emit('step_update', getSteps(), namespace ='/brew', broadcast=True)
+            socketio.emit('switch_state_update', app.brewapp_switch_state, namespace ='/brew')
 
     ## if Automatic step and timer is started
     if(cs.get("timer_start") != None):
@@ -187,13 +240,16 @@ def stepjob():
         now = int((datetime.utcnow() - datetime(1970,1,1)).total_seconds())*1000
         ## switch to next step if timer is over
         if(end < now ):
-
-            if(cs.get("type") == 'A'):
-                nextStep()
             if(cs.get("type") == 'M' and app.brewapp_current_step.get("finished", False) == False):
                 nextStepBeep()
-
+                sendMessageStep("Manual step " + cs.get("name") + " finnished!" )
                 app.brewapp_current_step["finished"] = True
+            else:
+                if (autoState == 1):
+                    #print cs.get("kettleid")
+                    if(cs.get("autostopheater") == 1):
+                        switch_automatic(cs.get("kettleid"))
+                nextStep()
 
 def getSteps():
     steps = getAsArray(Step, order = "order")

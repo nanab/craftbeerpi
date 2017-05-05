@@ -25,6 +25,7 @@
                     {{ k.sensorid | get_temp:temps }}°{{ config["UNIT"] }}</div>
                 <div class="text-muted target_temp">
                     <i class="fa fa-crosshairs" aria-hidden="true"></i> {{ k.target_temp }}°{{ config["UNIT"] }}
+					<i class="" ></i> | {{ k.flowmeter | get_flow:flows }}L
                 </div>
 
 

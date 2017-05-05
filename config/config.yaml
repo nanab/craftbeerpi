@@ -16,6 +16,16 @@ UNIT:
  options: ['C','F']
  description: 'Temperature Unit'
 
+MESSAGE_TYPE:
+ value: PUSHOVER
+ options: ['PUSHOVER']
+ description: 'Message Type !!!RESTART AFTER CHANGE OF THIS PARAMETER!!!'
+
+FLOWMETER_TYPE:
+ value: FLOWMETER
+ options: ['FLOWMETER']
+ description: 'Flowmeter Type !!!RESTART AFTER CHANGE OF THIS PARAMETER!!!'
+
 THERMOMETER_TYPE:
  value: 1WIRE
  options: ['1WIRE','USB','DUMMY', '1WIRE_V2']
@@ -71,3 +81,11 @@ WIFI_SOCKET_USER:
 WIFI_SOCKET_PASSWORD:
   value: 12345
   description: 'password for wifi socket'
+
+MESSAGE_USER_KEY:
+  value: u9d82yen11p58thvbkvpsa269of3jw
+  description: 'Userkey for pushover'
+
+MESSAGE_APP_KEY:
+  value: avtwfyd8cba7fyxgwc33ujh2m62afb
+  description: 'Appkey for pushover'

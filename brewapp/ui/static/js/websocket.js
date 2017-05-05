@@ -13,6 +13,7 @@ function mySocket (socketFactory) {
   mySocket.forward('config');
   mySocket.forward('temp_udpdate');
   mySocket.forward('kettle_update');
+  mySocket.forward('flowmeter_update');
   mySocket.forward('kettle_state_update');
   mySocket.forward('switch_state_update');
   mySocket.forward('timer_update');

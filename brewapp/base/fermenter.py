@@ -202,7 +202,12 @@ def step_control():
     for i in app.cbp['CURRENT_TASK']:
         step = app.cbp['CURRENT_TASK'][i]
         fermenter = app.cbp['FERMENTERS'][i]
-        temp = app.brewapp_thermometer_last[fermenter["sensorid"]]
+        #temp = app.brewapp_thermometer_last[fermenter["sensorid"]]
+        useHydromter = fermenter.get("usehydrometer")
+        if useHydromter is not None and useHydromter is True:
+            temp = app.brewapp_hydrometer_cfg[fermenter.get("hydrometerid")].get("temp")
+        else:
+            temp = app.brewapp_thermometer_last[fermenter["sensorid"]]
 
         if step.get("timer_start", None) is None:
             if(step.get("direction", "C") == 'C'):

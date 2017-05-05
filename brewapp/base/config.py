@@ -65,6 +65,8 @@ def init():
 
 from brewapp.base.devices import *
 from brewapp.base.thermometer import *
+from brewapp.base.flowmeter import *
+from brewapp.base.message import *
 
 @app.route('/api/config/setup', methods=['GET'])
 def config_setup():
@@ -90,8 +92,18 @@ def initDriver():
         '1WIRE_V2': w1_thermometer2.OneWireThermometer2(),
         'USB': usb_thermometer.USBThermometer()
     }
+    flowmeters = {
+        'FLOWMETER' : flowmeter.Flowmeter()
+    }
+    messages = {
+        'PUSHOVER' : pushover.pushMessage()
+    }
 
     app.brewapp_hardware = hardware.get(app.brewapp_config.get("SWITCH_TYPE", "DUMMY"), dummygpio.DummyGPIO())
     app.brewapp_thermometer = thermometer.get(app.brewapp_config.get("THERMOMETER_TYPE", "DUMMY"), dummy_thermometer.DummyThermometer())
+    app.brewapp_flowmeter = flowmeters.get(app.brewapp_config.get("FLOWMETER_TYPE", "FLOWMETER"), flowmeter.Flowmeter())
+    app.brewapp_sendmessage = messages.get(app.brewapp_config.get("MESSAGE_TYPE", "PUSHOVER"), pushover.pushMessage())
     app.logger.info(app.brewapp_hardware )
     app.logger.info(app.brewapp_thermometer )
+    app.logger.info(app.brewapp_flowmeter )
+    app.logger.info(app.brewapp_sendmessage )

@@ -14,7 +14,11 @@ class Step(db.Model):
     start = db.Column(db.DateTime())
     end = db.Column(db.DateTime())
     kettleid = db.Column(db.Integer())
-
+    wateramountfill = db.Column(db.Integer())
+    switchid = db.Column(db.Integer())
+    switchstate = db.Column(db.Integer())
+    autostartheater = db.Column(db.Integer())
+    autostopheater = db.Column(db.Integer())
     def __repr__(self):
         return self.name
 
@@ -42,6 +46,11 @@ class RecipeBookSteps(db.Model):
     type = db.Column(db.String(1))
     kettleid = db.Column(db.Integer())
     receipe_id = db.Column(db.Integer, db.ForeignKey('recipe_books.id'))
+    wateramountfill = db.Column(db.Integer())
+    switchid = db.Column(db.Integer())
+    switchstate = db.Column(db.Integer())
+    autostartheater = db.Column(db.Integer())
+    autostopheater = db.Column(db.Integer())
 
     def __repr__(self):
         return self.name
@@ -60,6 +69,7 @@ class Kettle(db.Model):
     target_temp = db.Column(db.Integer())
     height = db.Column(db.Integer())
     diameter = db.Column(db.Integer())
+    flowmeter = db.Column(db.String(255))
 
     def __repr__(self):
         return self.name
@@ -125,6 +135,7 @@ class Fermenter(db.Model):
     cooleroffset_min = db.Column(db.Float())
     cooleroffset_max = db.Column(db.Float())
     target_temp = db.Column(db.Integer())
+    usehydrometer = db.Column(db.Boolean)
     steps = db.relationship('FermenterStep', backref='Fermenter', lazy='joined', cascade="all, delete-orphan", order_by="FermenterStep.order")
 
     def __repr__(self):

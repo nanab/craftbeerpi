@@ -135,5 +135,6 @@
   "DELETE_HARDWARE_MESSAGE": "Are you sure that you want to delete the Hardware",
   "HYDROMETER": "Hydrometer",
   "USE_HYDROMETER": "Use Hydrometer for Control",
-  "IMPORT_BEER_XML": "Upload BeerXML File"
+  "IMPORT_BEER_XML": "Upload BeerXML File",
+  "FLOWMETER": "Flowmeter"
 }

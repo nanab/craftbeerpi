@@ -95,6 +95,7 @@ def initKettle():
             "sensorid": v.sensorid,
             "heater": v.heater,
             "agitator": v.agitator,
+			"flowmeter": v.flowmeter,
             "automatic": False,
         }
 
