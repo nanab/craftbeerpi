@@ -19,10 +19,10 @@
             </div>
         </div>
 		<div class="form-group" ng-show="autoCheckFormShow">
-			<label>Start heater:
+			<label>{{ 'START_HEATER' | translate }}:
 				<input type="checkbox" ng-model="item.autostartheater">
 			</label>
-			<label>Stop heater:
+			<label>{{ 'STOP_HEATER' | translate }}:
 				<input type="checkbox" ng-model="item.autostopheater">
 			</label>
 		</div>
@@ -44,11 +44,11 @@
             </select>
         </div>
 		<div class="form-group" ng-show="fillFormShow">
-            <label>Waterfill in liters</label>
+            <label>{{ 'WATERFILL_AMOUNT' | translate }}:</label>
             <input type="number" ng-model="item.wateramountfill" class="form-control">
         </div>
 		<div class="form-group" ng-show="switchFormShow">
-            <label>Switch id</label>
+            <label>{{ 'SWITCH_ID' | translate }}:</label>
 			<select class="form-control" ng-model="item.switchid">
 				<option ng-repeat="t in hardware" value="{{ t.key }}"
                                         ng-selected="item.switchid == t.key">{{ t.value }}</option>
@@ -56,9 +56,14 @@
             <!--<input type="number" ng-model="item.switchid" class="form-control">-->
         </div>
 		<div class="form-group" ng-show="switchFormShow">
-            <label>Switch state</label>
+            <label>{{ 'SWITCH_STATE' | translate }}:</label>
             <input type="number" ng-model="item.switchstate" class="form-control">
         </div>
+		<div class="form-group">
+			<label>{{ 'SEND_MESSAGE' | translate }}:
+				<input type="checkbox" ng-model="item.sendmessage">
+			</label>
+		</div>
     </form>
 </div>
 </div>

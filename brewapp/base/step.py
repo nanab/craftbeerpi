@@ -60,7 +60,8 @@ def nextStep():
         db.session.add(active)
         db.session.commit()
         if (active.type != "M"):
-            sendMessageStep("Step " + active.name + " finnished!" )
+            if (active.sendmessage == 1):
+                sendMessage("Step " + active.name + " finnished!" )
         app.brewapp_current_step  = None
 
     if(inactive != None):
@@ -70,7 +71,8 @@ def nextStep():
         db.session.add(inactive)
         db.session.commit()
         app.brewapp_current_step  = to_dict(inactive)
-        sendMessageStep("Step " + inactive.name + " started!")
+        if (inactive.sendmessage == 1):
+            sendMessage("Step " + inactive.name + " started!")
         if(inactive.timer_start != None):
             app.brewapp_current_step["endunix"] =  int((inactive.timer_start - datetime(1970,1,1)).total_seconds())*1000
 
@@ -107,7 +109,6 @@ def start_timer_of_current_step():
     setTargetTemp(active.kettleid, active.temp)
     app.brewapp_current_step = to_dict(active)
     app.brewapp_current_step["endunix"] = int((active.timer_start - datetime(1970, 1, 1)).total_seconds()) * 1000
-
     db.session.add(active)
     db.session.commit()
     socketio.emit('step_update', getSteps(), namespace ='/brew')
@@ -242,7 +243,8 @@ def stepjob():
         if(end < now ):
             if(cs.get("type") == 'M' and app.brewapp_current_step.get("finished", False) == False):
                 nextStepBeep()
-                sendMessageStep("Manual step " + cs.get("name") + " finnished!" )
+                if (cs.get("sendmessage") == 1):
+                    sendMessageStep("Manual step " + cs.get("name") + " finnished!" )
                 app.brewapp_current_step["finished"] = True
             else:
                 if (autoState == 1):

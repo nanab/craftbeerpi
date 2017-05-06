@@ -661,6 +661,9 @@ function StepOverviewController($scope, $controller, CBPSteps, CBPKettle, $uibMo
 		if ($scope.item.autostopheater == 1){
 			$scope.item.autostopheater = true;
 		}
+        if ($scope.item.sendmessage == 1){
+			$scope.item.sendmessage = true;
+		}
 		$scope.ShowHide(item.type);
 		if ($scope.item.switchid != null){
 			$scope.item.switchid = item.switchid.toString();

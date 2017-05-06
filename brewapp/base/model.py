@@ -19,6 +19,7 @@ class Step(db.Model):
     switchstate = db.Column(db.Integer())
     autostartheater = db.Column(db.Integer())
     autostopheater = db.Column(db.Integer())
+    sendmessage = db.Column(db.Integer())
     def __repr__(self):
         return self.name
 
@@ -51,7 +52,7 @@ class RecipeBookSteps(db.Model):
     switchstate = db.Column(db.Integer())
     autostartheater = db.Column(db.Integer())
     autostopheater = db.Column(db.Integer())
-
+    sendmessage = db.Column(db.Integer())
     def __repr__(self):
         return self.name
 
