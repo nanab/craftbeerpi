@@ -5,6 +5,7 @@ from brewapp import app
 from brewapp.base.actor import ActorBase
 from brewapp.base.model import *
 from flowmeterdata import *
+import json
 
 import threading
 try:
@@ -28,7 +29,7 @@ class Flowmeter(ActorBase):
 
 				gpioNumber = self.translateDeviceName(hw["config"]["switch"])
 				GPIO.setup(gpioNumber,GPIO.IN, pull_up_down = GPIO.PUD_UP)
-				GPIO.add_event_detect(gpioNumber, GPIO.RISING, callback=self.doAClick, bouncetime=20) # Beer, on Pin 23
+				GPIO.add_event_detect(gpioNumber, GPIO.RISING, callback=self.doAClick, bouncetime=20) 
 				app.logger.info("flowmeter" + str(gpioNumber))
 				app.logger.info("INIT flowmeter" + str(f))
 				fms[f] = FlowMeterData()
@@ -64,8 +65,12 @@ class Flowmeter(ActorBase):
 		return gpio
 
 	def clearFlowmeterData(self,flowId):
-		fms[int(flowId)].clear
-		return "ok"
+		for f in app.brewapp_flowmeter_cfg:
+			if (f == int(flowId)):
+				result = fms[f].clear()
+				return "OK"
+			else:
+				return "Sensor not found"
 
 	
 
